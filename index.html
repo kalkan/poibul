@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POI Radius Explorer</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <header class="sidebar-header">
+        <h1>POI Explorer</h1>
+        <p class="subtitle">Click the map or search a place</p>
+      </header>
+
+      <!-- Search -->
+      <div class="search-section">
+        <div class="search-box">
+          <input type="text" id="search-input" placeholder="Search a place name…" autocomplete="off" />
+          <button id="search-btn" title="Search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+        </div>
+        <div id="search-results" class="search-results hidden"></div>
+      </div>
+
+      <!-- Selection Info -->
+      <div id="selection-info" class="section hidden">
+        <div class="section-title">Selected Point</div>
+        <div class="selection-details">
+          <span id="sel-lat"></span>, <span id="sel-lon"></span>
+          <br/><span class="label">Radius:</span> 100 km
+        </div>
+        <button id="clear-btn" class="btn-clear">Clear Selection</button>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <span>Querying nearby features…</span>
+      </div>
+
+      <!-- Error -->
+      <div id="error-msg" class="error-msg hidden"></div>
+
+      <!-- Summary -->
+      <div id="summary-section" class="section hidden">
+        <div class="section-title">Summary</div>
+        <p id="summary-text" class="summary-text"></p>
+      </div>
+
+      <!-- Nearby Settlements -->
+      <div id="settlements-section" class="section hidden">
+        <div class="section-title">Nearby Settlements <span id="settlements-count" class="count-badge"></span></div>
+        <div id="settlements-list" class="results-list"></div>
+      </div>
+
+      <!-- Nearby Infrastructure -->
+      <div id="infrastructure-section" class="section hidden">
+        <div class="section-title">Nearby Infrastructure</div>
+
+        <div class="infra-category">
+          <h4>Airports <span id="airports-count" class="count-badge"></span></h4>
+          <div id="airports-list" class="results-list"></div>
+        </div>
+
+        <div class="infra-category">
+          <h4>Ports &amp; Harbours <span id="ports-count" class="count-badge"></span></h4>
+          <div id="ports-list" class="results-list"></div>
+        </div>
+
+        <div class="infra-category">
+          <h4>Dams &amp; Reservoirs <span id="dams-count" class="count-badge"></span></h4>
+          <div id="dams-list" class="results-list"></div>
+        </div>
+      </div>
+
+      <!-- Data Notes -->
+      <div id="data-notes" class="section hidden">
+        <div class="section-title">Data Notes</div>
+        <ul class="notes-list">
+          <li>Results depend on OpenStreetMap data completeness.</li>
+          <li>Population values may be missing or outdated for many places.</li>
+          <li>Military facilities are only partially represented in OSM.</li>
+          <li>Dams, ports, and airports may be mapped differently across countries.</li>
+          <li>Rankings use population when available; otherwise a heuristic based on place type and distance.</li>
+        </ul>
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <p>Click anywhere on the map or search for a place to explore nearby features within a 100 km radius.</p>
+      </div>
+
+      <footer class="sidebar-footer">
+        <span>Data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</span>
+        <span>Geocoding by <a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener">Nominatim</a></span>
+      </footer>
+    </aside>
+
+    <!-- Map -->
+    <div id="map"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
