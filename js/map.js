@@ -34,10 +34,26 @@ const ICONS = {
 export function initMap(containerId, clickHandler) {
   map = L.map(containerId, { zoomControl: true }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // Base layers
+  const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19,
-  }).addTo(map);
+  });
+
+  const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '&copy; <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics',
+    maxZoom: 19,
+  });
+
+  // Default layer
+  osmLayer.addTo(map);
+
+  // Layer control
+  const baseLayers = {
+    'OpenStreetMap': osmLayer,
+    'Satellite': satelliteLayer,
+  };
+  L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);
 
   resultLayerGroup = L.layerGroup().addTo(map);
   onMapClick = clickHandler;
