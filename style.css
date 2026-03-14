@@ -118,6 +118,7 @@ a:hover { text-decoration: underline; }
 
 .result-item .name { font-weight: 600; }
 .result-item .meta { color: var(--text-secondary); font-size: 0.75rem; margin-top: 2px; }
+.result-item .meta.coords { font-size: 0.7rem; color: #94a3b8; font-family: monospace; }
 
 .no-results { font-size: 0.8rem; color: var(--text-secondary); font-style: italic; padding: 4px 0; }
 

@@ -88,7 +88,15 @@ export function showSelectionInfo(lat, lon) {
 }
 
 /* ── Loading ── */
-export function showLoading() { show(els.loading); }
+export function showLoading(msg) {
+  const span = els.loading.querySelector('span');
+  if (span) span.textContent = msg || 'Querying nearby features…';
+  show(els.loading);
+}
+export function updateLoadingMsg(msg) {
+  const span = els.loading.querySelector('span');
+  if (span) span.textContent = msg;
+}
 export function hideLoading() { hide(els.loading); }
 
 /* ── Error ── */
@@ -198,9 +206,11 @@ export function clearAll() {
 
 function settlementCard(s) {
   const popStr = s.population != null ? `Pop: ${formatNumber(s.population)}` : 'Pop: unknown';
+  const coords = `${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}`;
   return `<div class="result-item" data-id="${s.id}" data-lat="${s.lat}" data-lon="${s.lon}">
     <div class="name">${escHtml(s.name)}</div>
     <div class="meta">${capitalise(s.placeType)} &middot; ${s.distanceKm} km &middot; ${popStr}</div>
+    <div class="meta coords">${coords}</div>
   </div>`;
 }
 
@@ -210,9 +220,11 @@ function infraCard(item, type) {
     const codes = [item.iata, item.icao].filter(Boolean).join(' / ');
     if (codes) extra = ` &middot; ${codes}`;
   }
+  const coords = `${item.lat.toFixed(4)}, ${item.lon.toFixed(4)}`;
   return `<div class="result-item" data-id="${item.id}" data-lat="${item.lat}" data-lon="${item.lon}">
     <div class="name">${escHtml(item.name)}</div>
     <div class="meta">${item.subtype} &middot; ${item.distanceKm} km${extra}</div>
+    <div class="meta coords">${coords}</div>
   </div>`;
 }
 

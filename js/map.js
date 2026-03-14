@@ -112,7 +112,7 @@ export function addResultMarkers(data) {
   const topSettlements = data.settlements.slice(0, 20);
   for (const s of topSettlements) {
     const m = L.marker([s.lat, s.lon], { icon: ICONS.settlement })
-      .bindPopup(popupContent(s.name, s.placeType, s.distanceKm, s.population));
+      .bindPopup(popupContent(s.name, s.placeType, s.distanceKm, s.population, null, s.lat, s.lon));
     m.itemId = s.id;
     m.on('click', () => { if (onMarkerClick) onMarkerClick(s.id); });
     resultLayerGroup.addLayer(m);
@@ -121,7 +121,7 @@ export function addResultMarkers(data) {
   for (const a of data.airports) {
     const codes = [a.iata, a.icao].filter(Boolean).join(' / ');
     const m = L.marker([a.lat, a.lon], { icon: ICONS.airport })
-      .bindPopup(popupContent(a.name, a.subtype, a.distanceKm, null, codes));
+      .bindPopup(popupContent(a.name, a.subtype, a.distanceKm, null, codes, a.lat, a.lon));
     m.itemId = a.id;
     m.on('click', () => { if (onMarkerClick) onMarkerClick(a.id); });
     resultLayerGroup.addLayer(m);
@@ -129,7 +129,7 @@ export function addResultMarkers(data) {
 
   for (const p of data.ports) {
     const m = L.marker([p.lat, p.lon], { icon: ICONS.port })
-      .bindPopup(popupContent(p.name, p.subtype, p.distanceKm));
+      .bindPopup(popupContent(p.name, p.subtype, p.distanceKm, null, null, p.lat, p.lon));
     m.itemId = p.id;
     m.on('click', () => { if (onMarkerClick) onMarkerClick(p.id); });
     resultLayerGroup.addLayer(m);
@@ -137,17 +137,18 @@ export function addResultMarkers(data) {
 
   for (const d of data.dams) {
     const m = L.marker([d.lat, d.lon], { icon: ICONS.dam })
-      .bindPopup(popupContent(d.name, d.subtype, d.distanceKm));
+      .bindPopup(popupContent(d.name, d.subtype, d.distanceKm, null, null, d.lat, d.lon));
     m.itemId = d.id;
     m.on('click', () => { if (onMarkerClick) onMarkerClick(d.id); });
     resultLayerGroup.addLayer(m);
   }
 }
 
-function popupContent(name, type, distKm, population, extra) {
+function popupContent(name, type, distKm, population, extra, lat, lon) {
   let html = `<strong>${name}</strong><br><em>${type}</em><br>${distKm} km away`;
   if (population) html += `<br>Pop: ${population.toLocaleString()}`;
   if (extra) html += `<br>${extra}`;
+  if (lat != null && lon != null) html += `<br><span style="font-size:0.8em;color:#64748b;">${lat.toFixed(4)}, ${lon.toFixed(4)}</span>`;
   return html;
 }
 

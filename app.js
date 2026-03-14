@@ -7,7 +7,7 @@ import { searchPlace, analysePoint, generateSummary } from './js/api.js';
 import { initMap, setSelection, clearSelection, resetView, addResultMarkers, panToResult, openPopupForId, setMarkerClickHandler } from './js/map.js';
 import {
   cacheDom, bindEvents, showSearchResults, hideSearchResults,
-  showSelectionInfo, showLoading, hideLoading, showError, hideError,
+  showSelectionInfo, showLoading, hideLoading, updateLoadingMsg, showError, hideError,
   renderResults, clearAll, setItemClickHandler, highlightItem,
 } from './js/ui.js';
 
@@ -87,7 +87,7 @@ async function selectPoint(lat, lon) {
   hideError();
 
   try {
-    const data = await analysePoint(lat, lon);
+    const data = await analysePoint(lat, lon, updateLoadingMsg);
     const summary = generateSummary(data);
     renderResults(data, summary);
     addResultMarkers(data);

@@ -48,14 +48,45 @@ export async function searchPlace(query) {
 
 /* ─────────── Overpass ─────────── */
 
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+];
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/**
+ * Run an Overpass query with retry + exponential backoff on 429/5xx.
+ * Tries alternate endpoints on repeated failures.
+ */
 async function runOverpass(query) {
-  const res = await fetch(OVERPASS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'data=' + encodeURIComponent(query),
-  });
-  if (!res.ok) throw new Error(`Overpass error: ${res.status}`);
-  return res.json();
+  const maxRetries = 4;
+  const baseDelay = 1500; // ms
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    // Alternate endpoints on retries
+    const url = OVERPASS_ENDPOINTS[attempt % OVERPASS_ENDPOINTS.length];
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'data=' + encodeURIComponent(query),
+      });
+      if (res.ok) return res.json();
+      if (res.status === 429 || res.status >= 500) {
+        // Rate limited or server error — wait and retry
+        const delay = baseDelay * Math.pow(2, attempt);
+        await sleep(delay);
+        continue;
+      }
+      throw new Error(`Overpass error: ${res.status}`);
+    } catch (err) {
+      if (attempt === maxRetries - 1) throw err;
+      // Network error — wait and retry
+      await sleep(baseDelay * Math.pow(2, attempt));
+    }
+  }
+  throw new Error('Overpass: all retries exhausted');
 }
 
 /**
@@ -185,36 +216,44 @@ function processDams(elements, originLat, originLon) {
 /**
  * Analyse the 100 km radius around (lat, lon).
  * Returns { settlements, airports, ports, dams, errors }.
+ * Optional onProgress callback receives status strings.
  */
-export async function analysePoint(lat, lon) {
+export async function analysePoint(lat, lon, onProgress) {
   const key = `${round(lat, 5)},${round(lon, 5)}`;
   if (cache.overpass.has(key)) return cache.overpass.get(key);
 
   const errors = [];
 
-  // Run all queries in parallel; partial results on failure
-  const [settlementsRes, airportsRes, portsRes, damsRes] = await Promise.allSettled([
-    runOverpass(settlementsQuery(lat, lon, RADIUS_M)),
-    runOverpass(airportsQuery(lat, lon, RADIUS_M)),
-    runOverpass(portsQuery(lat, lon, RADIUS_M)),
-    runOverpass(damsQuery(lat, lon, RADIUS_M)),
-  ]);
+  // Run queries sequentially with small delays to avoid Overpass 429 rate limits.
+  // Each query has its own retry logic with exponential backoff.
+  const QUERY_DELAY = 1200; // ms between sequential queries
 
-  const settlements = settlementsRes.status === 'fulfilled'
-    ? processSettlements(settlementsRes.value.elements || [], lat, lon)
-    : (errors.push('Settlements query failed: ' + settlementsRes.reason?.message), []);
+  async function safeQuery(queryFn, processFn, label) {
+    try {
+      const raw = await runOverpass(queryFn(lat, lon, RADIUS_M));
+      return processFn(raw.elements || [], lat, lon);
+    } catch (err) {
+      errors.push(`${label} query failed: ${err.message}`);
+      return [];
+    }
+  }
 
-  const airports = airportsRes.status === 'fulfilled'
-    ? processAirports(airportsRes.value.elements || [], lat, lon)
-    : (errors.push('Airports query failed: ' + airportsRes.reason?.message), []);
+  const notify = onProgress || (() => {});
 
-  const ports = portsRes.status === 'fulfilled'
-    ? processPorts(portsRes.value.elements || [], lat, lon)
-    : (errors.push('Ports query failed: ' + portsRes.reason?.message), []);
+  notify('Querying settlements (1/4)…');
+  const settlements = await safeQuery(settlementsQuery, processSettlements, 'Settlements');
+  await sleep(QUERY_DELAY);
 
-  const dams = damsRes.status === 'fulfilled'
-    ? processDams(damsRes.value.elements || [], lat, lon)
-    : (errors.push('Dams query failed: ' + damsRes.reason?.message), []);
+  notify('Querying airports (2/4)…');
+  const airports = await safeQuery(airportsQuery, processAirports, 'Airports');
+  await sleep(QUERY_DELAY);
+
+  notify('Querying ports (3/4)…');
+  const ports = await safeQuery(portsQuery, processPorts, 'Ports');
+  await sleep(QUERY_DELAY);
+
+  notify('Querying dams & reservoirs (4/4)…');
+  const dams = await safeQuery(damsQuery, processDams, 'Dams');
 
   const result = { settlements, airports, ports, dams, errors };
   cache.overpass.set(key, result);
