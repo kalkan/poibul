@@ -8,7 +8,7 @@ import { initMap, setSelection, clearSelection, resetView, addResultMarkers, pan
 import {
   cacheDom, bindEvents, showSearchResults, hideSearchResults,
   showSelectionInfo, showLoading, hideLoading, updateLoadingMsg, showError, hideError,
-  renderResults, clearAll, setItemClickHandler, highlightItem,
+  renderResults, clearAll, setItemClickHandler, highlightItem, getRadiusKm,
 } from './js/ui.js';
 
 /* ── State ── */
@@ -72,6 +72,8 @@ function handleClear() {
 /* ── Core workflow ── */
 
 async function selectPoint(lat, lon) {
+  const radiusKm = getRadiusKm();
+
   // Avoid re-querying the same point
   if (currentLat != null && Math.abs(lat - currentLat) < 0.0001 && Math.abs(lon - currentLon) < 0.0001) return;
 
@@ -82,13 +84,13 @@ async function selectPoint(lat, lon) {
   // UI updates
   clearAll();
   showSelectionInfo(lat, lon);
-  setSelection(lat, lon);
+  setSelection(lat, lon, radiusKm);
   showLoading();
   hideError();
 
   try {
-    const data = await analysePoint(lat, lon, updateLoadingMsg);
-    const summary = generateSummary(data);
+    const data = await analysePoint(lat, lon, updateLoadingMsg, radiusKm);
+    const summary = generateSummary(data, radiusKm);
     renderResults(data, summary);
     addResultMarkers(data);
   } catch (err) {

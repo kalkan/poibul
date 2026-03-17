@@ -27,12 +27,17 @@
         <div id="search-results" class="search-results hidden"></div>
       </div>
 
+      <!-- Radius -->
+      <div class="radius-section">
+        <label for="radius-input" class="radius-label">Radius (km)</label>
+        <input type="number" id="radius-input" min="10" max="500" step="10" value="100" />
+      </div>
+
       <!-- Selection Info -->
       <div id="selection-info" class="section hidden">
         <div class="section-title">Selected Point</div>
         <div class="selection-details">
           <span id="sel-lat"></span>, <span id="sel-lon"></span>
-          <br/><span class="label">Radius:</span> 100 km
         </div>
         <button id="clear-btn" class="btn-clear">Clear Selection</button>
       </div>
@@ -93,7 +98,7 @@
       <!-- Empty State -->
       <div id="empty-state" class="empty-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <p>Click anywhere on the map or search for a place to explore nearby features within a 100 km radius.</p>
+        <p>Click anywhere on the map or search for a place to explore nearby features within the selected radius.</p>
       </div>
 
       <footer class="sidebar-footer">

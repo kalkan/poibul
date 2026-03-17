@@ -5,7 +5,6 @@
 // Default: centre on Türkiye
 const DEFAULT_CENTER = [39.0, 35.0];
 const DEFAULT_ZOOM = 6;
-const RADIUS_M = 100000;
 
 let map = null;
 let selectionMarker = null;
@@ -87,14 +86,14 @@ function addLegend() {
 
 /* ── Selection marker + circle ── */
 
-export function setSelection(lat, lon) {
+export function setSelection(lat, lon, radiusKm = 100) {
   clearSelection();
 
   selectionMarker = L.marker([lat, lon]).addTo(map)
     .bindPopup(`<strong>Selected point</strong><br>${lat.toFixed(4)}, ${lon.toFixed(4)}`);
 
   radiusCircle = L.circle([lat, lon], {
-    radius: RADIUS_M,
+    radius: radiusKm * 1000,
     color: '#2563eb',
     fillColor: '#2563eb',
     fillOpacity: 0.06,

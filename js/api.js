@@ -12,8 +12,7 @@ import {
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 
-const RADIUS_KM = 100;
-const RADIUS_M = RADIUS_KM * 1000;
+const DEFAULT_RADIUS_KM = 100;
 const MAX_SETTLEMENTS = 50;
 
 /* ── In-memory cache ── */
@@ -100,7 +99,7 @@ function elementLatLon(el) {
 
 /* ─────────── Settlements ─────────── */
 
-function processSettlements(elements, originLat, originLon) {
+function processSettlements(elements, originLat, originLon, radiusKm) {
   const items = [];
   for (const el of elements) {
     const pos = elementLatLon(el);
@@ -111,7 +110,7 @@ function processSettlements(elements, originLat, originLon) {
     const placeType = tags.place || 'unknown';
     const population = parsePopulation(tags.population);
     const distanceKm = round(haversineKm(originLat, originLon, pos.lat, pos.lon), 1);
-    if (distanceKm > RADIUS_KM) continue;
+    if (distanceKm > radiusKm) continue;
     items.push({
       id: el.type + '/' + el.id,
       name,
@@ -135,7 +134,7 @@ function processSettlements(elements, originLat, originLon) {
 
 /* ─────────── Infrastructure helpers ─────────── */
 
-function processAirports(elements, originLat, originLon) {
+function processAirports(elements, originLat, originLon, radiusKm) {
   const items = [];
   for (const el of elements) {
     const pos = elementLatLon(el);
@@ -143,7 +142,7 @@ function processAirports(elements, originLat, originLon) {
     const tags = el.tags || {};
     const name = tags.name || tags['name:en'] || tags.icao || tags.iata || 'Unnamed';
     const distanceKm = round(haversineKm(originLat, originLon, pos.lat, pos.lon), 1);
-    if (distanceKm > RADIUS_KM) continue;
+    if (distanceKm > radiusKm) continue;
 
     let subtype = 'Airport';
     if (tags.military === 'airfield' || tags.landuse === 'military') subtype = 'Military airfield';
@@ -163,7 +162,7 @@ function processAirports(elements, originLat, originLon) {
   return deduplicateByNameAndProximity(items, 3).sort((a, b) => a.distanceKm - b.distanceKm);
 }
 
-function processPorts(elements, originLat, originLon) {
+function processPorts(elements, originLat, originLon, radiusKm) {
   const items = [];
   for (const el of elements) {
     const pos = elementLatLon(el);
@@ -171,7 +170,7 @@ function processPorts(elements, originLat, originLon) {
     const tags = el.tags || {};
     const name = tags.name || tags['name:en'] || 'Unnamed';
     const distanceKm = round(haversineKm(originLat, originLon, pos.lat, pos.lon), 1);
-    if (distanceKm > RADIUS_KM) continue;
+    if (distanceKm > radiusKm) continue;
 
     let subtype = 'Harbour';
     if (tags.amenity === 'ferry_terminal') subtype = 'Ferry terminal';
@@ -187,7 +186,7 @@ function processPorts(elements, originLat, originLon) {
   return deduplicateByNameAndProximity(items, 2).sort((a, b) => a.distanceKm - b.distanceKm);
 }
 
-function processDams(elements, originLat, originLon) {
+function processDams(elements, originLat, originLon, radiusKm) {
   const items = [];
   for (const el of elements) {
     const pos = elementLatLon(el);
@@ -195,7 +194,7 @@ function processDams(elements, originLat, originLon) {
     const tags = el.tags || {};
     const name = tags.name || tags['name:en'] || 'Unnamed';
     const distanceKm = round(haversineKm(originLat, originLon, pos.lat, pos.lon), 1);
-    if (distanceKm > RADIUS_KM) continue;
+    if (distanceKm > radiusKm) continue;
 
     let subtype = 'Dam';
     if (tags.water === 'reservoir') subtype = 'Reservoir';
@@ -218,8 +217,9 @@ function processDams(elements, originLat, originLon) {
  * Returns { settlements, airports, ports, dams, errors }.
  * Optional onProgress callback receives status strings.
  */
-export async function analysePoint(lat, lon, onProgress) {
-  const key = `${round(lat, 5)},${round(lon, 5)}`;
+export async function analysePoint(lat, lon, onProgress, radiusKm = DEFAULT_RADIUS_KM) {
+  const radiusM = radiusKm * 1000;
+  const key = `${round(lat, 5)},${round(lon, 5)},${radiusKm}`;
   if (cache.overpass.has(key)) return cache.overpass.get(key);
 
   const errors = [];
@@ -230,8 +230,8 @@ export async function analysePoint(lat, lon, onProgress) {
 
   async function safeQuery(queryFn, processFn, label) {
     try {
-      const raw = await runOverpass(queryFn(lat, lon, RADIUS_M));
-      return processFn(raw.elements || [], lat, lon);
+      const raw = await runOverpass(queryFn(lat, lon, radiusM));
+      return processFn(raw.elements || [], lat, lon, radiusKm);
     } catch (err) {
       errors.push(`${label} query failed: ${err.message}`);
       return [];
@@ -263,7 +263,7 @@ export async function analysePoint(lat, lon, onProgress) {
 /**
  * Generate a natural-language summary.
  */
-export function generateSummary(data) {
+export function generateSummary(data, radiusKm = DEFAULT_RADIUS_KM) {
   const { settlements, airports, ports, dams } = data;
   const parts = [];
 
@@ -286,5 +286,5 @@ export function generateSummary(data) {
     parts.push('no major infrastructure features were found');
   }
 
-  return `Within 100 km of the selected point, ${parts.join('. ')}.`;
+  return `Within ${radiusKm} km of the selected point, ${parts.join('. ')}.`;
 }

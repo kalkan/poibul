@@ -33,6 +33,14 @@ export function cacheDom() {
   els.damsList = $('dams-list');
   els.dataNotes = $('data-notes');
   els.emptyState = $('empty-state');
+  els.radiusInput = $('radius-input');
+}
+
+export function getRadiusKm() {
+  const val = parseInt(els.radiusInput.value, 10);
+  if (isNaN(val) || val < 10) return 10;
+  if (val > 500) return 500;
+  return val;
 }
 
 /* ── Show/hide helpers ── */

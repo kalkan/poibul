@@ -75,6 +75,18 @@ a:hover { text-decoration: underline; }
 .search-result-item:last-child { border-bottom: none; }
 .search-result-item:hover { background: var(--accent-light); }
 
+/* ── Radius ── */
+.radius-section {
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.radius-label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+.radius-section input[type="number"] {
+  width: 80px; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 0.85rem; outline: none; transition: border-color .15s;
+}
+.radius-section input[type="number"]:focus { border-color: var(--accent); }
+
 /* ── Sections ── */
 .section { padding: 16px 20px; border-bottom: 1px solid var(--border); }
 .section.hidden { display: none; }
