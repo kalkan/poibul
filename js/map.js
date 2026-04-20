@@ -17,15 +17,25 @@ let onMapClick = null;
 let onMarkerClick = null;
 
 /* ── Marker icon factories ── */
-function dotIcon(cssClass) {
-  return L.divIcon({ className: cssClass, iconSize: [12, 12], iconAnchor: [6, 6] });
+function svgIcon(svgContent, cssClass, size = 26) {
+  return L.divIcon({
+    className: '',
+    html: `<div class="${cssClass}" style="width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center">${svgContent}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
 }
 
+const SVG_SETTLEMENT = '<svg width="12" height="12" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="1"><circle cx="12" cy="12" r="4"/></svg>';
+const SVG_AIRPORT = '<svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>';
+const SVG_PORT = '<svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M2 20a7 7 0 0 0 10 0 7 7 0 0 0 10 0"/><path d="M12 4v12"/><path d="M12 4a4 4 0 0 1 4 4H8a4 4 0 0 1 4-4z"/></svg>';
+const SVG_DAM = '<svg width="13" height="13" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M12 2.7l.6.6c3 3 6.4 4.8 6.4 9.7a7 7 0 0 1-14 0c0-4.9 3.4-6.7 6.4-9.7z"/></svg>';
+
 const ICONS = {
-  settlement: dotIcon('marker-settlement'),
-  airport: dotIcon('marker-airport'),
-  port: dotIcon('marker-port'),
-  dam: dotIcon('marker-dam'),
+  settlement: svgIcon(SVG_SETTLEMENT, 'marker-settlement'),
+  airport: svgIcon(SVG_AIRPORT, 'marker-airport', 28),
+  port: svgIcon(SVG_PORT, 'marker-port', 28),
+  dam: svgIcon(SVG_DAM, 'marker-dam', 28),
 };
 
 /* ── Init ── */
